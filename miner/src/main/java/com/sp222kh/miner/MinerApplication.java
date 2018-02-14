@@ -1,18 +1,36 @@
 package com.sp222kh.miner;
 
 
+import com.sp222kh.miner.csv.BoolConverter;
+import com.sp222kh.miner.csv.LongConverter;
+import com.sp222kh.miner.csv.ProjectItem;
+import net.sf.jsefa.Deserializer;
+import net.sf.jsefa.csv.CsvIOFactory;
+import net.sf.jsefa.csv.config.CsvConfiguration;
+import org.apache.commons.io.FileUtils;
+import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
+import org.codehaus.plexus.logging.console.ConsoleLoggerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+
+import java.io.File;
+import java.io.FileReader;
+import java.net.URL;
 
 @SpringBootApplication
 public class MinerApplication {
 
     private static final Logger log = LoggerFactory.getLogger(MinerApplication.class);
 
+    @Value("${gittorrent.dump.url.latest}")
+    String gittorrentUrl;
+
+    String DUMP_PATH = "./latest.tar.gz";
 
     public static void main(String[] args) {
 
@@ -22,12 +40,43 @@ public class MinerApplication {
     @Bean
     public CommandLineRunner demo(ProjectRepository repository) {
         return (args) -> {
-            // save a couple of projects
-            repository.save(new Project("Java something", "A java project that bla bla"));
-            repository.save(new Project("Chloe", "O'Brian"));
-            repository.save(new Project("Kim", "Bauer"));
-            repository.save(new Project("David", "Palmer"));
-            repository.save(new Project("Michelle", "Dessler"));
+
+            // Download file
+            File dump = new File(DUMP_PATH);
+            File destDir = new File("./");
+            FileUtils.copyURLToFile(new URL(gittorrentUrl), dump);
+
+            // Extract csvs
+            final TarGZipUnArchiver ua = new TarGZipUnArchiver();
+            ConsoleLoggerManager manager = new ConsoleLoggerManager();
+            manager.initialize();
+            ua.enableLogging(manager.getLoggerForComponent("wo"));
+            ua.setSourceFile(dump);
+            ua.setDestDirectory(destDir);
+            ua.extract();
+
+            // Delete dump
+            dump.delete();
+
+            // Deserialize csv entries and store them in db
+            // http://mariemjabloun.blogspot.de/2014/10/jsefa-tutorial-and-how-to-support-for.html
+            CsvConfiguration config = new CsvConfiguration();
+            config.setFieldDelimiter(',');
+            config.getSimpleTypeConverterProvider().registerConverterType(Long.class, LongConverter.class);
+            config.getSimpleTypeConverterProvider().registerConverterType(Boolean.class, BoolConverter.class);
+
+            Deserializer deserializer = CsvIOFactory.createFactory(config, ProjectItem.class).createDeserializer();
+            deserializer.open(new FileReader("./latest/projects.csv"));
+
+            while (deserializer.hasNext()) {
+                ProjectItem p = deserializer.next();
+                System.out.println(p.id + " " + p.url + " " + p.createdAt + " " + p.deleted);
+                repository.save(new Project(p.id, p.name, p.description));
+            }
+            deserializer.close(true);
+
+            // Remove csvs
+            FileUtils.deleteDirectory(new File("./latest"));
 
             // fetch all projects
             log.info("Projects found with findAll():");

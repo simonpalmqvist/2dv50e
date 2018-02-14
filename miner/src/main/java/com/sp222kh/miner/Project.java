@@ -7,7 +7,6 @@ import javax.persistence.*;
 public class Project {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
     @Column(name = "name")
@@ -18,13 +17,14 @@ public class Project {
 
     protected Project() {}
 
-    public Project(String name, String description) {
+    public Project(long id, String name, String description) {
+        this.id = id;
         this.name = name;
         this.description = description;
     }
 
     @Override
     public String toString() {
-        return String.format("Customer[id=%d, name='%s', description='%s']", id, name, description);
+        return String.format("Project[id=%d, name='%s', description='%s']", id, name, description);
     }
 }
