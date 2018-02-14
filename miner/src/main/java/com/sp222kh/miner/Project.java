@@ -1,30 +1,38 @@
 package com.sp222kh.miner;
 
+import com.sp222kh.miner.csv.ProjectItem;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "project")
 public class Project {
 
+
     @Id
     private long id;
 
-    @Column(name = "name")
+    @Column
+    private String url;
+
+    @Column
     private String name;
 
-    @Column(name = "description")
+    @Column
     private String description;
 
     protected Project() {}
 
-    public Project(long id, String name, String description) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
+    public Project(ProjectItem item) {
+        id = item.id;
+        url = item.url;
+        name = item.name;
+        description = item.description;
+
     }
 
     @Override
     public String toString() {
-        return String.format("Project[id=%d, name='%s', description='%s']", id, name, description);
+        return String.format("Project[id=%d, url='%s', name='%s', description='%s']", id, url, name, description);
     }
 }

@@ -70,8 +70,7 @@ public class MinerApplication {
 
             while (deserializer.hasNext()) {
                 ProjectItem p = deserializer.next();
-                System.out.println(p.id + " " + p.url + " " + p.createdAt + " " + p.deleted);
-                repository.save(new Project(p.id, p.name, p.description));
+                if (!p.deleted && p.language.equals("Java")) repository.save(new Project(p));
             }
             deserializer.close(true);
 
