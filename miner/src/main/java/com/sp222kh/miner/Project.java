@@ -3,6 +3,7 @@ package com.sp222kh.miner;
 import com.sp222kh.miner.csv.ProjectItem;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = "project")
@@ -21,14 +22,26 @@ public class Project {
     @Column
     private String description;
 
+    @Column(name = "created_at")
+    private Date createdAt;
+
+    @Column(name = "updated_at")
+    private Date updatedAt;
+
+    @Column(name = "forked_from")
+    private Long forkedFromId;
+
+
     protected Project() {}
 
     public Project(ProjectItem item) {
-        id = item.id;
-        url = item.url;
-        name = item.name;
-        description = item.description;
-
+        this.id = item.id;
+        this.url = item.url;
+        this.name = item.name;
+        this.description = item.description;
+        this.createdAt = item.createdAt;
+        this.updatedAt = item.updatedAt;
+        this.forkedFromId = item.forkedFromId;
     }
 
     @Override

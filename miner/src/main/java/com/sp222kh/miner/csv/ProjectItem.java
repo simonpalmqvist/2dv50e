@@ -30,7 +30,7 @@ public class ProjectItem {
     public Date createdAt;
 
     @CsvField(pos = 8, converterType = LongConverter.class)
-    public long forkedFromId;
+    public Long forkedFromId;
 
     @CsvField(pos = 9, converterType = BoolConverter.class)
     public boolean deleted;
