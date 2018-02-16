@@ -1,33 +1,37 @@
 package com.sp222kh.miner;
 
 import com.sp222kh.miner.csv.CommitItem;
-import com.sp222kh.miner.csv.ProjectCommitItem;
-import com.sp222kh.miner.csv.ProjectItem;
 
 import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import java.util.Date;
 
 @Entity
-@Table(name = "commit")
+@Table(name = "commit", indexes = {
+        @Index(columnList = "project_id", name = "project_id_index"),
+        @Index(columnList = "sha", name = "sha_index")
+})
 public class Commit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @Column(name = "project_id")
+    @Column(name = "project_id", nullable = false)
     private long projectId;
 
-    @Column
+    @Column(nullable = false)
     private String sha;
 
-    @Column(name = "author_id")
+    @Column(name = "author_id", nullable = false)
     private long authorId;
 
-    @Column(name = "committer_id")
+    @Column(name = "committer_id", nullable = false)
     private long committerId;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private Date createdAt;
 
     protected Commit() {}

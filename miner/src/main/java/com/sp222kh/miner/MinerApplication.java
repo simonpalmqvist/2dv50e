@@ -42,11 +42,14 @@ public class MinerApplication {
             // https://stackoverflow.com/questions/22163662/how-to-create-a-java-cron-job
 
             // Download file
+            log.info("Download started");
             File dump = new File(DUMP_PATH);
             File destDir = new File("./");
             FileUtils.copyURLToFile(new URL(DUMP_URL), dump);
+            log.info("Download finished");
 
             // Extract csvs
+            log.info("Extracting files started");
             final TarGZipUnArchiver ua = new TarGZipUnArchiver();
             ConsoleLoggerManager manager = new ConsoleLoggerManager();
             manager.initialize();
@@ -54,41 +57,47 @@ public class MinerApplication {
             ua.setSourceFile(dump);
             ua.setDestDirectory(destDir);
             ua.extract();
+            log.info("Extracting files finished");
 
             // Delete dump
+            log.info("Remove TAR started");
             dump.delete();
+            log.info("Remove TAR Finished");
 
             // Deserialize csv entries and store them in db
-            // http://mariemjabloun.blogspot.de/2014/10/jsefa-tutorial-and-how-to-support-for.html
             CsvConfiguration config = new CsvConfiguration();
             config.setFieldDelimiter(',');
             config.getSimpleTypeConverterProvider().registerConverterType(Long.class, LongConverter.class);
             config.getSimpleTypeConverterProvider().registerConverterType(Boolean.class, BoolConverter.class);
 
+            log.info("Importing projects started");
             Deserializer deserializer = CsvIOFactory.createFactory(config, ProjectItem.class).createDeserializer();
             deserializer.open(new FileReader("./latest/projects.csv"));
 
-            HashSet<Long> projects = new HashSet<>();
-            HashMap<Long, Set<Long>> projectCommits = new HashMap<>();
+            HashMap<Long, Integer> projects = new HashMap<>();
 
             while (deserializer.hasNext()) {
                 ProjectItem p = deserializer.next();
 
                 if (!p.deleted && p.language.equals("Java")) {
                     repository.save(new Project(p));
-                    projects.add(p.id);
+                    projects.put(p.id, 0);
                 }
             }
 
             deserializer.close(true);
+            log.info("Importing projects finished");
 
+            log.info("Importing project commits started");
             deserializer = CsvIOFactory.createFactory(config, ProjectCommitItem.class).createDeserializer();
             deserializer.open(new FileReader("./latest/project_commits.csv"));
+
+            HashMap<Long, Set<Long>> projectCommits = new HashMap<>();
 
             while (deserializer.hasNext()) {
                 ProjectCommitItem pc = deserializer.next();
 
-                if (projects.contains(pc.projectId)) {
+                if (projects.containsKey(pc.projectId)) {
                     if(!projectCommits.containsKey(pc.commitId)) projectCommits.put(pc.commitId, new HashSet<>());
                     projectCommits
                             .get(pc.commitId)
@@ -97,24 +106,89 @@ public class MinerApplication {
             }
 
             deserializer.close(true);
+            log.info("Importing project commits finished");
 
+            log.info("Importing commits started");
             deserializer = CsvIOFactory.createFactory(config, CommitItem.class).createDeserializer();
             deserializer.open(new FileReader("./latest/commits.csv"));
+
+            List<Commit> commitBulk = new ArrayList<>();
 
             while (deserializer.hasNext()) {
                 CommitItem c = deserializer.next();
 
                 if (projectCommits.containsKey(c.id)) {
                     for (long projectId : projectCommits.get(c.id)) {
-                        commitRepository.save(new Commit(projectId, c));
+                        commitBulk.add(new Commit(projectId, c));
+                        if (commitBulk.size() > 100) {
+                            commitRepository.save(commitBulk);
+                            commitBulk.clear();
+                        }
                     }
+                }
+            }
+            commitRepository.save(commitBulk);
+
+            deserializer.close(true);
+            log.info("Importing commits finished");
+
+            log.info("Importing watchers started");
+            deserializer = CsvIOFactory.createFactory(config, WatcherItem.class).createDeserializer();
+            deserializer.open(new FileReader("./latest/watchers.csv"));
+
+            while (deserializer.hasNext()) {
+                WatcherItem w = deserializer.next();
+
+                if (projects.containsKey(w.projectId)) {
+                    projects.put(w.projectId, projects.get(w.projectId) + 1);
                 }
             }
 
             deserializer.close(true);
+            log.info("Importing watchers finished");
+
+            log.info("Update and filter projects started");
+
+            for (Long id : projects.keySet()) {
+                Project p = repository.findOne(id);
+                p.setContributors(commitRepository.findContributorsForProject(id));
+                p.setLastCommit(commitRepository.findLatestCommitDateForProject(id));
+                p.setWatchers(projects.get(id));
+
+                float activeDays = 0;
+
+                if (p.getLastCommit() != null)
+                    activeDays = (p.getLastCommit().getTime() - p.getCreatedAt().getTime()) / (1000*60*60*24);
+
+                if(p.getWatchers() > 0 && p.getContributors() > 1 && activeDays > 99) {
+                    repository.save(p);
+                } else {
+                    repository.delete(id);
+                    commitRepository.deleteByProjectId(id);
+                }
+            }
+            log.info("Update and filter projects finished");
+
+            log.info("Remove duplicates started");
+            for (Long id : projects.keySet()) {
+                if(repository.exists(id)) {
+                    List<Long> duplicates = commitRepository.findProjectDuplicates(id);
+
+                    //Remove the original repository so it's not deleted.
+                    duplicates.remove(0);
+
+                    for(Long duplicate : duplicates) {
+                        repository.delete(duplicate);
+                        commitRepository.deleteByProjectId(duplicate);
+                    }
+                }
+            }
+            log.info("Remove duplicates finished");
 
             // Remove csvs
+            log.info("Remove CSVs started");
             FileUtils.deleteDirectory(new File("./latest"));
+            log.info("Remove CSVs finished");
         };
     }
 }
