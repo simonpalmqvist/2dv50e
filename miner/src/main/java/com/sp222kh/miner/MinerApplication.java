@@ -1,6 +1,5 @@
 package com.sp222kh.miner;
 
-
 import com.sp222kh.miner.csv.*;
 import net.sf.jsefa.Deserializer;
 import net.sf.jsefa.csv.CsvIOFactory;
@@ -26,9 +25,14 @@ public class MinerApplication {
 
     private static final Logger log = LoggerFactory.getLogger(MinerApplication.class);
 
-    @Value("${gittorrent.dump.url.latest}")
+    @Value("${gittorrent.dump.url}")
     private String DUMP_URL;
-    private String DUMP_PATH = "./latest.tar.gz";
+
+    @Value("${gittorrent.dump.folder}")
+    private String DUMP_FOLDER;
+
+    private String DIR = "./";
+    private String DUMP_FILE = "./latest.tar.gz";
 
     public static void main(String[] args) {
 
@@ -43,8 +47,8 @@ public class MinerApplication {
 
             // Download file
             log.info("Download started");
-            File dump = new File(DUMP_PATH);
-            File destDir = new File("./");
+            File dump = new File(DIR + DUMP_FILE);
+            File destDir = new File(DIR);
             FileUtils.copyURLToFile(new URL(DUMP_URL), dump);
             log.info("Download finished");
 
@@ -72,7 +76,7 @@ public class MinerApplication {
 
             log.info("Importing projects started");
             Deserializer deserializer = CsvIOFactory.createFactory(config, ProjectItem.class).createDeserializer();
-            deserializer.open(new FileReader("./latest/projects.csv"));
+            deserializer.open(new FileReader(DIR + DUMP_FOLDER + "projects.csv"));
 
             HashMap<Long, Integer> projects = new HashMap<>();
 
@@ -90,7 +94,7 @@ public class MinerApplication {
 
             log.info("Importing project commits started");
             deserializer = CsvIOFactory.createFactory(config, ProjectCommitItem.class).createDeserializer();
-            deserializer.open(new FileReader("./latest/project_commits.csv"));
+            deserializer.open(new FileReader(DIR + DUMP_FOLDER + "project_commits.csv"));
 
             HashMap<Long, Set<Long>> projectCommits = new HashMap<>();
 
@@ -110,7 +114,7 @@ public class MinerApplication {
 
             log.info("Importing commits started");
             deserializer = CsvIOFactory.createFactory(config, CommitItem.class).createDeserializer();
-            deserializer.open(new FileReader("./latest/commits.csv"));
+            deserializer.open(new FileReader(DIR + DUMP_FOLDER + "commits.csv"));
 
             List<Commit> commitBulk = new ArrayList<>();
 
@@ -134,7 +138,7 @@ public class MinerApplication {
 
             log.info("Importing watchers started");
             deserializer = CsvIOFactory.createFactory(config, WatcherItem.class).createDeserializer();
-            deserializer.open(new FileReader("./latest/watchers.csv"));
+            deserializer.open(new FileReader(DIR + DUMP_FOLDER + "watchers.csv"));
 
             while (deserializer.hasNext()) {
                 WatcherItem w = deserializer.next();
@@ -187,7 +191,7 @@ public class MinerApplication {
 
             // Remove csvs
             log.info("Remove CSVs started");
-            FileUtils.deleteDirectory(new File("./latest"));
+            FileUtils.deleteDirectory(new File(DIR + DUMP_FOLDER));
             log.info("Remove CSVs finished");
         };
     }
