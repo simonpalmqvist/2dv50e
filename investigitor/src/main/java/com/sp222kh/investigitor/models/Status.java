@@ -23,6 +23,8 @@ public class Status {
     @Column(name = "finished_at")
     private Date finishedAt;
 
+    protected Status() {}
+
     public Status(String name) {
         this.name = name;
         this.isFinished = false;

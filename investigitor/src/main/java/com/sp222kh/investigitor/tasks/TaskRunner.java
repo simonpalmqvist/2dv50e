@@ -34,6 +34,7 @@ public class TaskRunner {
                 }
                 catch(Exception e) {
                     log.error(name + " failed: " + e.getMessage());
+                    e.printStackTrace();
                     return false;
                 }
             } else {

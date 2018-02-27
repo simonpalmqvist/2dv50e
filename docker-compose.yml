@@ -24,6 +24,8 @@ services:
       - db
       - gittorrentmock
     environment:
-      GITTORRENT_URL: http://gittorrentmock/new_dump.tar.gz
-      GITTORRENT_FOLDER: latest/
+      GHTORRENT_URL: http://gittorrentmock/new_dump.tar.gz
+      GHTORRENT_FOLDER: latest/
+      GHTORRENT_FILE: ./latest.tar.gz
+      CLONE_FOLDER: ./repos/
       DB_HOST: db
