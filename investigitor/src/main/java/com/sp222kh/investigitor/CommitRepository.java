@@ -1,4 +1,4 @@
-package com.sp222kh.miner;
+package com.sp222kh.investigitor;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;

@@ -18,3 +18,12 @@ services:
       - "3001:80"
     volumes:
       - ./dump:/usr/share/nginx/html
+  investigitor:
+    build: ./investigitor
+    links:
+      - db
+      - gittorrentmock
+    environment:
+      GITTORRENT_URL: http://gittorrentmock/new_dump.tar.gz
+      GITTORRENT_FOLDER: latest/
+      DB_HOST: db

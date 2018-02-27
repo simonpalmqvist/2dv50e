@@ -1,4 +1,4 @@
-package com.sp222kh.miner;
+package com.sp222kh.investigitor;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -8,7 +8,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class MinerApplicationTests {
+public class InvestigitorApplicationTests {
 
     static {
         System.setProperty("GITTORRENT_URL", "foo");

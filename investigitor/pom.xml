@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.sp222kh</groupId>
-	<artifactId>miner</artifactId>
+	<artifactId>investigitor</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>miner</name>
+	<name>Investigitor</name>
 	<description>Demo project for Spring Boot</description>
 
 	<parent>
@@ -58,6 +58,12 @@
 			<groupId>net.sf.jsefa</groupId>
 			<artifactId>jsefa</artifactId>
 			<version>1.1.0.RELEASE</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.eclipse.jgit</groupId>
+			<artifactId>org.eclipse.jgit</artifactId>
+            <version>4.9.2.201712150930-r</version>
 		</dependency>
 	</dependencies>
 

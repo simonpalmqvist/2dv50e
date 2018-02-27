@@ -1,6 +1,6 @@
-package com.sp222kh.miner;
+package com.sp222kh.investigitor;
 
-import com.sp222kh.miner.csv.ProjectItem;
+import com.sp222kh.investigitor.csv.ProjectItem;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -74,5 +74,10 @@ public class Project {
 
     public void setContributors(int contributors) {
         this.contributors = contributors;
+    }
+
+    // Convert api url to clone url
+    public String getPathToRepo() {
+        return  url.substring(28);
     }
 }

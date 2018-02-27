@@ -1,4 +1,4 @@
-package com.sp222kh.miner.csv;
+package com.sp222kh.investigitor.csv;
 
 import net.sf.jsefa.common.converter.SimpleTypeConverter;
 

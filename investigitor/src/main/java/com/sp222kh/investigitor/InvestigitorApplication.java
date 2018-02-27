@@ -1,6 +1,6 @@
-package com.sp222kh.miner;
+package com.sp222kh.investigitor;
 
-import com.sp222kh.miner.csv.*;
+import com.sp222kh.investigitor.csv.*;
 import net.sf.jsefa.Deserializer;
 import net.sf.jsefa.csv.CsvIOFactory;
 import net.sf.jsefa.csv.config.CsvConfiguration;
@@ -17,13 +17,14 @@ import org.springframework.context.annotation.Bean;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
 @SpringBootApplication
-public class MinerApplication {
+public class InvestigitorApplication {
 
-    private static final Logger log = LoggerFactory.getLogger(MinerApplication.class);
+    private static final Logger log = LoggerFactory.getLogger(InvestigitorApplication.class);
 
     @Value("${gittorrent.dump.url}")
     private String DUMP_URL;
@@ -36,7 +37,7 @@ public class MinerApplication {
 
     public static void main(String[] args) {
 
-		SpringApplication.run(MinerApplication.class, args);
+		SpringApplication.run(InvestigitorApplication.class, args);
 	}
 
     @Bean
@@ -193,6 +194,24 @@ public class MinerApplication {
             log.info("Remove CSVs started");
             FileUtils.deleteDirectory(new File(DIR + DUMP_FOLDER));
             log.info("Remove CSVs finished");
+
+            log.info("Clone Repositories started");
+            for (Project p : repository.findAll()) {
+                log.info("Starting " + p.getPathToRepo());
+                String path = "../repos/" + p.getPathToRepo();
+                String command = "git clone --depth 1 https://github.com" + p.getPathToRepo() + ".git " + path;
+
+                try {
+                    (new File(path)).mkdirs();
+                    Process process = Runtime.getRuntime().exec(command);
+                    process.waitFor();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            log.info("Clone Repositories finished");
         };
     }
 }

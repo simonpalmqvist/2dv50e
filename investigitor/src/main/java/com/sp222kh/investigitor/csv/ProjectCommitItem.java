@@ -1,13 +1,13 @@
-package com.sp222kh.miner.csv;
+package com.sp222kh.investigitor.csv;
 
 import net.sf.jsefa.csv.annotation.CsvDataType;
 import net.sf.jsefa.csv.annotation.CsvField;
 
 @CsvDataType
-public class WatcherItem {
+public class ProjectCommitItem {
     @CsvField(pos = 1)
     public long projectId;
 
     @CsvField(pos = 2)
-    public long userId;
+    public long commitId;
 }

@@ -1,6 +1,6 @@
-package com.sp222kh.miner;
+package com.sp222kh.investigitor;
 
-import com.sp222kh.miner.csv.CommitItem;
+import com.sp222kh.investigitor.csv.CommitItem;
 
 import javax.persistence.*;
 import javax.persistence.Entity;
