@@ -8,14 +8,16 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.LoggingEvent;
 
 import ch.qos.logback.core.Appender;
+import com.sp222kh.investigitor.models.Status;
+import com.sp222kh.investigitor.repositories.StatusRepository;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.logging.LogLevel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,11 +25,16 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class TaskRunnerTest {
+public class TaskRunnerTests {
 
     private TaskRunner taskRunner;
 
+    private TaskRunner taskRunner2;
+
     private Logger log = (Logger) LoggerFactory.getLogger(TaskRunner.class);
+
+    @Mock
+    private StatusRepository repository;
 
     @Mock
     private Appender mockAppender;
@@ -36,10 +43,13 @@ public class TaskRunnerTest {
     private Task task;
 
     @Mock
-    private Task task1;
+    private Task1 task1;
 
     @Mock
-    private Task task2;
+    private Task2 task2;
+
+    @Mock
+    private Status status;
 
     @Captor
     private ArgumentCaptor<LoggingEvent> captorLoggingEvent;
@@ -52,7 +62,8 @@ public class TaskRunnerTest {
 
     @Before
     public void setup() {
-        taskRunner = new TaskRunner(new Task[]{task});
+        taskRunner = new TaskRunner(new Task[]{task}, repository);
+        taskRunner2 = new TaskRunner(new Task[]{task, task1, task2}, repository);
         log.addAppender(mockAppender);
     }
 
@@ -91,12 +102,25 @@ public class TaskRunnerTest {
     }
 
     @Test
-    public void shouldExecuteSeveralTasks() throws Exception {
-        Task[] tasks = new Task[]{task, task1, task2};
+    public void shouldLogWhenTaskIsSkipped() {
+        String name = task.getClass().getSimpleName();
 
-        taskRunner = new TaskRunner(tasks);
+        when(status.getIsFinished()).thenReturn(true);
+        when(repository.findByName(name)).thenReturn(status);
 
         taskRunner.run();
+
+        verify(mockAppender, times(1)).doAppend(captorLoggingEvent.capture());
+
+        assertEquals(
+                name + " skipped",
+                captorLoggingEvent.getAllValues().get(0).getMessage()
+        );
+    }
+
+    @Test
+    public void shouldExecuteSeveralTasks() throws Exception {
+        taskRunner2.run();
 
         verify(task).run();
         verify(task1).run();
@@ -109,15 +133,26 @@ public class TaskRunnerTest {
                 .when(task1)
                 .run();
 
-        Task[] tasks = new Task[]{task, task1, task2};
-
-        taskRunner = new TaskRunner(tasks);
-
-        taskRunner.run();
+        taskRunner2.run();
 
         verify(task).run();
         verify(task1).run();
         verifyZeroInteractions(task2);
+    }
+
+    @Test
+    public void shouldSkipAlreadyDoneTask() throws Exception {
+        String name = task.getClass().getSimpleName();
+
+        when(status.getIsFinished()).thenReturn(true);
+        when(repository.findByName(name)).thenReturn(status);
+
+        taskRunner2.run();
+
+        verifyZeroInteractions(task);
+        verify(task1).run();
+        verify(task2).run();
+
     }
 
     @Test
@@ -126,11 +161,7 @@ public class TaskRunnerTest {
                 .when(task1)
                 .run();
 
-        Task[] tasks = new Task[]{task, task1, task2};
-
-        taskRunner = new TaskRunner(tasks);
-
-        assertFalse(taskRunner.run());
+        assertFalse(taskRunner2.run());
     }
 
     @Test
@@ -141,18 +172,29 @@ public class TaskRunnerTest {
                 .when(task1)
                 .run();
 
-        Task[] tasks = new Task[]{task, task1, task2};
-
-        taskRunner = new TaskRunner(tasks);
-
-        taskRunner.run();
+        taskRunner2.run();
 
         verify(mockAppender, times(4)).doAppend(captorLoggingEvent.capture());
 
         LoggingEvent event = captorLoggingEvent.getAllValues().get(3);
 
-        assertEquals(task.getClass().getSimpleName() + " failed: " + reason, event.getMessage());
+        assertEquals(task1.getClass().getSimpleName() + " failed: " + reason, event.getMessage());
         assertEquals(Level.ERROR, event.getLevel());
     }
 
+    @Test
+    public void shouldExecuteMethodsInRightOrder() throws Exception {
+        InOrder inOrder = inOrder(task, status, repository);
+
+        taskRunner.runTask(task, status);
+
+        inOrder.verify(status).started();
+        inOrder.verify(task).run();
+        inOrder.verify(status).finished();
+        inOrder.verify(repository).save(status);
+    }
+
+    class Task1 implements Task { @Override public void run() throws Exception {} }
+
+    class Task2 implements Task { @Override public void run() throws Exception {} }
 }
