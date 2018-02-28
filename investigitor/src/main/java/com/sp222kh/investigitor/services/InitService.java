@@ -1,6 +1,7 @@
 package com.sp222kh.investigitor.services;
 
 import com.sp222kh.investigitor.CommitRepository;
+import com.sp222kh.investigitor.FileInfoRepository;
 import com.sp222kh.investigitor.ProjectRepository;
 import com.sp222kh.investigitor.csv.*;
 import com.sp222kh.investigitor.repositories.StatusRepository;
@@ -39,14 +40,16 @@ public class InitService {
     private StatusRepository statusRepository;
     private ProjectRepository projectRepository;
     private CommitRepository commitRepository;
+    private FileInfoRepository fileInfoRepository;
 
     private CsvConfiguration csvConfiguration = new CsvConfiguration();
 
     public InitService(StatusRepository statusRepository, ProjectRepository projectRepository,
-                       CommitRepository commitRepository) {
+                       CommitRepository commitRepository, FileInfoRepository fileInfoRepository) {
         this.statusRepository = statusRepository;
         this.projectRepository = projectRepository;
         this.commitRepository = commitRepository;
+        this.fileInfoRepository = fileInfoRepository;
     }
 
     @PostConstruct
@@ -71,7 +74,8 @@ public class InitService {
                 new UpdateAndFilterProjectsTask(projectRepository, commitRepository,
                         createDeserializer(WatcherItem.class), dumpFolder.getAbsolutePath() + "/" + WATCHERS_CSV_NAME),
                 new DeleteDatabaseDumpTask(dumpFolder),
-                new DownloadSourceCodeTask(projectRepository)
+                new DownloadSourceCodeTask(projectRepository),
+                new GetFileInfoTask(projectRepository, fileInfoRepository)
         }, statusRepository);
 
         taskRunner.run();

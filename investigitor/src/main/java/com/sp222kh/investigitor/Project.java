@@ -80,4 +80,8 @@ public class Project {
     public String getPathToRepo() {
         return  url.substring(28);
     }
+
+    public long getId() {
+        return id;
+    }
 }
