@@ -1,5 +1,6 @@
-package com.sp222kh.investigitor;
+package com.sp222kh.investigitor.repositories;
 
+import com.sp222kh.investigitor.models.Commit;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;

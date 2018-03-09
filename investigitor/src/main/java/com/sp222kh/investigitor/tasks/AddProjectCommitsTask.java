@@ -1,8 +1,8 @@
 package com.sp222kh.investigitor.tasks;
 
-import com.sp222kh.investigitor.Commit;
-import com.sp222kh.investigitor.CommitRepository;
-import com.sp222kh.investigitor.ProjectRepository;
+import com.sp222kh.investigitor.models.Commit;
+import com.sp222kh.investigitor.repositories.CommitRepository;
+import com.sp222kh.investigitor.repositories.ProjectRepository;
 import com.sp222kh.investigitor.csv.CommitItem;
 import com.sp222kh.investigitor.csv.ProjectCommitItem;
 import net.sf.jsefa.Deserializer;

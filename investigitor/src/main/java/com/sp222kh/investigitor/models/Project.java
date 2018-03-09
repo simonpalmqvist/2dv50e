@@ -1,4 +1,4 @@
-package com.sp222kh.investigitor;
+package com.sp222kh.investigitor.models;
 
 import com.sp222kh.investigitor.csv.ProjectItem;
 
@@ -35,6 +35,9 @@ public class Project {
 
     @Column(nullable = false)
     private int contributors;
+
+    @Column(nullable = false)
+    private boolean downloaded = false;
 
     protected Project() {}
 
@@ -83,5 +86,17 @@ public class Project {
 
     public long getId() {
         return id;
+    }
+
+    public boolean isDownloaded() {
+        return downloaded;
+    }
+    public void setDownloaded(boolean downloaded) {
+        this.downloaded = downloaded;
+    }
+
+
+    public String getName() {
+        return name;
     }
 }

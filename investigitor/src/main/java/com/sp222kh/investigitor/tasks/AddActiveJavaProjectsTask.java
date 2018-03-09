@@ -1,12 +1,11 @@
 package com.sp222kh.investigitor.tasks;
 
-import com.sp222kh.investigitor.Project;
-import com.sp222kh.investigitor.ProjectRepository;
+import com.sp222kh.investigitor.models.Project;
+import com.sp222kh.investigitor.repositories.ProjectRepository;
 import com.sp222kh.investigitor.csv.ProjectItem;
 import net.sf.jsefa.Deserializer;
 
 import java.io.FileReader;
-import java.util.HashMap;
 
 public class AddActiveJavaProjectsTask implements Task {
     private ProjectRepository repository;

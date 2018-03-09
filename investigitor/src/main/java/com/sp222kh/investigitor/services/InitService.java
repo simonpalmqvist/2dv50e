@@ -1,8 +1,8 @@
 package com.sp222kh.investigitor.services;
 
-import com.sp222kh.investigitor.CommitRepository;
-import com.sp222kh.investigitor.FileInfoRepository;
-import com.sp222kh.investigitor.ProjectRepository;
+import com.sp222kh.investigitor.repositories.CommitRepository;
+import com.sp222kh.investigitor.repositories.FileInfoRepository;
+import com.sp222kh.investigitor.repositories.ProjectRepository;
 import com.sp222kh.investigitor.csv.*;
 import com.sp222kh.investigitor.repositories.StatusRepository;
 import com.sp222kh.investigitor.tasks.*;
@@ -74,8 +74,7 @@ public class InitService {
                 new UpdateAndFilterProjectsTask(projectRepository, commitRepository,
                         createDeserializer(WatcherItem.class), dumpFolder.getAbsolutePath() + "/" + WATCHERS_CSV_NAME),
                 new DeleteDatabaseDumpTask(dumpFolder),
-                new DownloadSourceCodeTask(projectRepository),
-                new GetFileInfoTask(projectRepository, fileInfoRepository)
+                new DownloadSourceCodeTask(projectRepository, fileInfoRepository)
         }, statusRepository);
 
         taskRunner.run();

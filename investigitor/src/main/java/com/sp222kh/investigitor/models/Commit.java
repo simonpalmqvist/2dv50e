@@ -1,4 +1,4 @@
-package com.sp222kh.investigitor;
+package com.sp222kh.investigitor.models;
 
 import com.sp222kh.investigitor.csv.CommitItem;
 
