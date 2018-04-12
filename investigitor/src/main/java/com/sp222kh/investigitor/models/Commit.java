@@ -1,7 +1,5 @@
 package com.sp222kh.investigitor.models;
 
-import com.sp222kh.investigitor.csv.CommitItem;
-
 import javax.persistence.*;
 import javax.persistence.Entity;
 import javax.persistence.Index;
@@ -16,31 +14,22 @@ import java.util.Date;
 public class Commit {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
-    @Column(name = "project_id", nullable = false)
+    @Column(name = "project_id")
     private long projectId;
 
-    @Column(nullable = false)
+    @Column
     private String sha;
 
-    @Column(name = "author_id", nullable = false)
+    @Column(name = "author_id")
     private long authorId;
 
-    @Column(name = "committer_id", nullable = false)
+    @Column(name = "committer_id")
     private long committerId;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at")
     private Date createdAt;
 
     protected Commit() {}
-
-    public Commit(Long projectId, CommitItem item) {
-        this.projectId = projectId;
-        this.sha = item.sha;
-        this.authorId = item.authorId;
-        this.committerId = item.committerId;
-        this.createdAt = item.createdAt;
-    }
 }

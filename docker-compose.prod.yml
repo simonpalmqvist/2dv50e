@@ -6,31 +6,24 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - /tmp/investigitor:/investigitor
-      - /tmp/data:/var/lib/postgresql/data/pgdata
+      - /mnt/data/investigitor:/investigitor
+      - /mnt/data/data:/var/lib/postgresql/data/pgdata
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       POSTGRES_DB: investigitor
       POSTGRES_USER: ninja
       POSTGRES_PASSWORD: pass
-  gittorrentmock:
-    image: nginx
-    ports:
-      - "3001:80"
-    volumes:
-      - ./dump:/usr/share/nginx/html
   investigitor:
     build: ./investigitor
     depends_on:
       - db
     links:
       - db
-      - gittorrentmock
     volumes:
-      - /tmp/investigitor:/investigitor
+      - /mnt/data/investigitor:/investigitor
     environment:
-      GHTORRENT_URL: http://gittorrentmock/new_dump.tar.gz
-      GHTORRENT_FOLDER: /investigitor/latest/
+      GHTORRENT_URL: http://ghtorrent-downloads.ewi.tudelft.nl/mysql/mysql-2018-03-01.tar.gz
+      GHTORRENT_FOLDER: /investigitor/mysql-2018-03-01/
       GHTORRENT_FILE: /investigitor/latest.tar.gz
       CLONE_FOLDER: /investigitor/repos/
       DB_HOST: db

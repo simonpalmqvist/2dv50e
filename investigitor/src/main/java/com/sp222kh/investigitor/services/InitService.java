@@ -1,21 +1,21 @@
 package com.sp222kh.investigitor.services;
 
-import com.sp222kh.investigitor.repositories.CommitRepository;
-import com.sp222kh.investigitor.repositories.FileInfoRepository;
-import com.sp222kh.investigitor.repositories.ProjectRepository;
-import com.sp222kh.investigitor.csv.*;
-import com.sp222kh.investigitor.repositories.StatusRepository;
+import com.sp222kh.investigitor.repositories.*;
 import com.sp222kh.investigitor.tasks.*;
-import net.sf.jsefa.csv.CsvDeserializer;
-import net.sf.jsefa.csv.CsvIOFactory;
-import net.sf.jsefa.csv.config.CsvConfiguration;
-import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
+import org.postgresql.PGConnection;
+import org.postgresql.copy.CopyManager;
+import org.rauschig.jarchivelib.ArchiverFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.net.URL;
+
+import static org.rauschig.jarchivelib.ArchiveFormat.TAR;
+import static org.rauschig.jarchivelib.CompressionType.GZIP;
 
 @Service
 public class InitService {
@@ -32,24 +32,28 @@ public class InitService {
     @Value("${ghtorrent.clone.folder}")
     private String CLONE_FOLDER;
 
-    private String PROJECT_CSV_NAME = "projects.csv";
-    private String PROJECT_COMMIT_CSV_NAME = "project_commits.csv";
-    private String COMMIT_CSV_NAME = "commits.csv";
-    private String WATCHERS_CSV_NAME = "watchers.csv";
+    @Autowired
+    JdbcTemplate jdbcTemplate;
 
-    private StatusRepository statusRepository;
-    private ProjectRepository projectRepository;
-    private CommitRepository commitRepository;
-    private FileInfoRepository fileInfoRepository;
+    private final String PROJECT_CSV_NAME = "projects.csv";
+    private final String PROJECT_COMMIT_CSV_NAME = "project_commits.csv";
+    private final String COMMIT_CSV_NAME = "commits.csv";
+    private final String WATCHERS_CSV_NAME = "watchers.csv";
 
-    private CsvConfiguration csvConfiguration = new CsvConfiguration();
+    private final StatusRepository statusRepository;
+    private final ProjectRepository projectRepository;
+    private final CommitRepository commitRepository;
+    private final FileInfoRepository fileInfoRepository;
+    private final SoftwareMetricsRepository softwareMetricsRepository;
 
     public InitService(StatusRepository statusRepository, ProjectRepository projectRepository,
-                       CommitRepository commitRepository, FileInfoRepository fileInfoRepository) {
+                       CommitRepository commitRepository, FileInfoRepository fileInfoRepository,
+                       SoftwareMetricsRepository softwareMetricsRepository) {
         this.statusRepository = statusRepository;
         this.projectRepository = projectRepository;
         this.commitRepository = commitRepository;
         this.fileInfoRepository = fileInfoRepository;
+        this.softwareMetricsRepository = softwareMetricsRepository;
     }
 
     @PostConstruct
@@ -57,31 +61,28 @@ public class InitService {
         File dumpArchive = new File(DUMP_FILE);
         File dumpFolder = new File(DUMP_FOLDER);
 
-        csvConfiguration.setFieldDelimiter(',');
-        csvConfiguration.getSimpleTypeConverterProvider().registerConverterType(Long.class, LongConverter.class);
-        csvConfiguration.getSimpleTypeConverterProvider().registerConverterType(Boolean.class, BoolConverter.class);
+        CopyManager copyManager = jdbcTemplate
+                .getDataSource()
+                .getConnection()
+                .unwrap(PGConnection.class)
+                .getCopyAPI();
 
         TaskRunner taskRunner = new TaskRunner(new Task[]{
                 new DownloadDatabaseDumpTask(new URL(DUMP_URL), dumpArchive),
-                new ExtractDatabaseDumpTask(new TarGZipUnArchiver(), dumpArchive, dumpFolder),
+                new ExtractDatabaseDumpTask(ArchiverFactory.createArchiver(TAR, GZIP), dumpArchive, dumpFolder),
                 new DeleteDatabaseDumpArchiveTask(dumpArchive),
-                new AddActiveJavaProjectsTask(projectRepository, createDeserializer(ProjectItem.class),
-                        dumpFolder.getAbsolutePath() +  "/" + PROJECT_CSV_NAME),
-                new AddProjectCommitsTask(projectRepository, commitRepository,
-                        createDeserializer(ProjectCommitItem.class), createDeserializer(CommitItem.class),
-                        dumpFolder.getAbsolutePath() +  "/" + PROJECT_COMMIT_CSV_NAME,
-                        dumpFolder.getAbsolutePath() +  "/" + COMMIT_CSV_NAME),
-                new UpdateAndFilterProjectsTask(projectRepository, commitRepository,
-                        createDeserializer(WatcherItem.class), dumpFolder.getAbsolutePath() + "/" + WATCHERS_CSV_NAME),
+                new ImportProjectsTask(copyManager, dumpFolder.getAbsolutePath() + "/" + PROJECT_CSV_NAME),
+                new ImportProjectCommitsTask(copyManager, dumpFolder.getAbsolutePath() + "/" + PROJECT_COMMIT_CSV_NAME),
+                new ImportCommitsTask(copyManager, dumpFolder.getAbsolutePath() + "/" + COMMIT_CSV_NAME),
+                new ImportWatchersTask(copyManager, dumpFolder.getAbsolutePath() + "/" + WATCHERS_CSV_NAME),
+                new FilterProjectsTask(projectRepository, commitRepository),
+                new FilterQualityProjectsTask(projectRepository, commitRepository),
+                new FilterDuplicateProjectsTask(projectRepository, commitRepository),
+                new DownloadSourceCodeTask(projectRepository, fileInfoRepository, CLONE_FOLDER),
                 new DeleteDatabaseDumpTask(dumpFolder),
-                new DownloadSourceCodeTask(projectRepository, fileInfoRepository)
+                new CollectSoftwareMetricsTask(projectRepository, softwareMetricsRepository, CLONE_FOLDER)
         }, statusRepository);
 
         taskRunner.run();
     }
-
-    private CsvDeserializer createDeserializer(Class csvClass) {
-        return CsvIOFactory.createFactory(csvConfiguration, csvClass).createDeserializer();
-    }
-
 }

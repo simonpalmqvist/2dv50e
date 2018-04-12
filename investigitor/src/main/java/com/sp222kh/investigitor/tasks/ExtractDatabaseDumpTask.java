@@ -1,10 +1,6 @@
 package com.sp222kh.investigitor.tasks;
 
-
-import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
-
-import org.codehaus.plexus.logging.console.ConsoleLogger;
-import org.codehaus.plexus.logging.Logger;
+import org.rauschig.jarchivelib.Archiver;
 
 
 import java.io.File;
@@ -12,21 +8,19 @@ import java.io.File;
 public class ExtractDatabaseDumpTask implements Task {
 
 
-    private TarGZipUnArchiver unArchiver;
+    private Archiver unArchiver;
     private File archive;
     private File destFolder;
 
-    public ExtractDatabaseDumpTask(TarGZipUnArchiver unArchiver, File archive, File destFolder) {
+    public ExtractDatabaseDumpTask(Archiver unArchiver, File archive, File destFolder) {
         this.unArchiver = unArchiver;
         this.archive = archive;
-        this.destFolder = destFolder;
+        this.destFolder = destFolder.getParentFile();
     }
 
     @Override
     public void run() throws Exception {
-        unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_INFO, ExtractDatabaseDumpTask.class.getSimpleName()));
-        unArchiver.setSourceFile(archive);
-        unArchiver.setDestDirectory(destFolder);
-        unArchiver.extract();
+        destFolder.mkdir();
+        unArchiver.extract(archive, destFolder);
     }
 }

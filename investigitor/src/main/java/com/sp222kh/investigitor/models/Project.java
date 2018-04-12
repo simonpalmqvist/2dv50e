@@ -1,25 +1,31 @@
 package com.sp222kh.investigitor.models;
 
-import com.sp222kh.investigitor.csv.ProjectItem;
-
 import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "project")
+@Table(name = "project", indexes = {
+        @Index(columnList = "language", name = "project_language_index")
+})
 public class Project {
 
     @Id
     private long id;
 
-    @Column(nullable = false)
+    @Column
     private String url;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(name = "owner_id")
+    private int ownerId;
 
     @Column
+    private String name;
+
+    @Column(length = 1024)
     private String description;
+
+    @Column
+    private String language;
 
     @Column(name = "created_at", nullable = false)
     private Date createdAt;
@@ -27,56 +33,19 @@ public class Project {
     @Column(name = "forked_from")
     private Long forkedFromId;
 
-    @Column(name = "last_commit")
-    private Date lastCommit;
+    @Column
+    private boolean deleted;
 
-    @Column(nullable = false)
-    private int watchers;
+    @Column(name = "updated_at")
+    private String updatedAt;
 
-    @Column(nullable = false)
-    private int contributors;
-
-    @Column(nullable = false)
-    private boolean downloaded = false;
+    @Column(name = "creator")
+    private Long creator;
 
     protected Project() {}
 
-    public Project(ProjectItem item) {
-        this.id = item.id;
-        this.url = item.url;
-        this.name = item.name;
-        this.description = item.description;
-        this.createdAt = item.createdAt;
-        this.forkedFromId = item.forkedFromId;
-        this.watchers = 0;
-    }
-
     public Date getCreatedAt() {
         return createdAt;
-    }
-
-    public Date getLastCommit() {
-        return lastCommit;
-    }
-
-    public void setLastCommit(Date lastCommit) {
-        this.lastCommit = lastCommit;
-    }
-
-    public int getWatchers() {
-        return watchers;
-    }
-
-    public void setWatchers(int watchers) {
-        this.watchers = watchers;
-    }
-
-    public int getContributors() {
-        return contributors;
-    }
-
-    public void setContributors(int contributors) {
-        this.contributors = contributors;
     }
 
     // Convert api url to clone url
@@ -87,14 +56,6 @@ public class Project {
     public long getId() {
         return id;
     }
-
-    public boolean isDownloaded() {
-        return downloaded;
-    }
-    public void setDownloaded(boolean downloaded) {
-        this.downloaded = downloaded;
-    }
-
 
     public String getName() {
         return name;

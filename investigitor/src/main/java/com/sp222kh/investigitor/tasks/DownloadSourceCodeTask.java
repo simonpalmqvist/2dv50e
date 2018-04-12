@@ -11,14 +11,17 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class DownloadSourceCodeTask implements Task {
 
     private final ProjectRepository projectRepository;
     private final FileInfoRepository fileInfoRepository;
+    private final String CLONE_FOLDER;
     private static final Logger log = LoggerFactory.getLogger(TaskRunner.class);
 
     public static final String[] FILES = new String[]{
@@ -32,27 +35,29 @@ public class DownloadSourceCodeTask implements Task {
             "build.gradle",
             "settings.gradle"
     };
+
     public static final Set<String> FILES_TO_KEEP = new HashSet<>(Arrays.asList(FILES));
 
-    public DownloadSourceCodeTask(ProjectRepository projectRepository, FileInfoRepository fileInfoRepository) {
+    public DownloadSourceCodeTask(ProjectRepository projectRepository, FileInfoRepository fileInfoRepository, String CLONE_FOLDER) {
         this.projectRepository = projectRepository;
         this.fileInfoRepository = fileInfoRepository;
+        this.CLONE_FOLDER = CLONE_FOLDER;
     }
 
     @Override
     public void run() throws Exception {
         for (Project p : projectRepository.findAll()) {
-            if (p.isDownloaded()) return;
+            String path = CLONE_FOLDER + p.getPathToRepo();
 
-            String path = "../repos/" + p.getPathToRepo();
+            if(Files.exists(new File(path).toPath())) return;
+
             String command = "git clone --depth 1 https://github.com" + p.getPathToRepo() + ".git " + path;
 
             try {
                 (new File(path)).mkdirs();
                 Process process = Runtime.getRuntime().exec(command);
-                process.waitFor();
+                process.waitFor(1, TimeUnit.HOURS);
                 cleanUpAndIndexFiles(p.getId(), new File(path));
-                p.setDownloaded(true);
                 projectRepository.save(p);
             } catch (IOException | InterruptedException e) {
                 log.info("Delete {} because of issues cloning or indexing files", p.getName());
