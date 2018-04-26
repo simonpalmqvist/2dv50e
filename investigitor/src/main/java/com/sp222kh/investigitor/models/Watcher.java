@@ -4,9 +4,9 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "watcher", indexes = {
+@Table(name = "watcher"/*, indexes = {
         @Index(columnList = "project_id", name = "watcher_project_id_index")
-})
+}*/)
 public class Watcher {
 
     @Id

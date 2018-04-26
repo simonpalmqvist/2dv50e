@@ -18,7 +18,7 @@ public class ImportCommitsTask implements Task {
 
     @Override
     public void run() throws Exception {
-        String sql = "COPY commit (id, sha, author_id, committer_id, project_id, created_at) FROM stdin CSV DELIMITER ',' NULL '\\N'";
+        String sql = "COPY commit (id, sha, author_id, committer_id, project_id, created_at_text) FROM stdin CSV DELIMITER ',' NULL '\\N'";
         Reader in = new BufferedReader(new FileReader(new File(file)));
         copyManager.copyIn(sql, in);
     }

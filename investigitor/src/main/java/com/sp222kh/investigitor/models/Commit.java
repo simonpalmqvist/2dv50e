@@ -7,10 +7,10 @@ import javax.persistence.Table;
 import java.util.Date;
 
 @Entity
-@Table(name = "commit", indexes = {
+@Table(name = "commit"/*, indexes = {
         @Index(columnList = "project_id", name = "project_id_index"),
         @Index(columnList = "sha", name = "sha_index")
-})
+}*/)
 public class Commit {
 
     @Id
@@ -30,6 +30,9 @@ public class Commit {
 
     @Column(name = "created_at")
     private Date createdAt;
+
+    @Column(name = "created_at_text")
+    private String createdAtText;
 
     protected Commit() {}
 }

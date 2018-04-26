@@ -3,10 +3,10 @@ package com.sp222kh.investigitor.models;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "project_commit", indexes = {
+@Table(name = "project_commit"/*, indexes = {
         @Index(columnList = "project_id", name = "project_commit_id_index"),
         @Index(columnList = "commit_id", name = "project_commit_commit_id_index")
-})
+}*/)
 public class ProjectCommit {
 
     @Id

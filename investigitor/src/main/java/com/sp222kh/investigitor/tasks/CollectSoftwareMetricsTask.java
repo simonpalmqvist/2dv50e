@@ -1,7 +1,6 @@
 package com.sp222kh.investigitor.tasks;
 
 import com.github.mauricioaniche.ck.CK;
-import com.github.mauricioaniche.ck.CKNumber;
 import com.github.mauricioaniche.ck.CKReport;
 import com.sp222kh.investigitor.models.Project;
 import com.sp222kh.investigitor.models.SoftwareMetrics;
@@ -9,6 +8,7 @@ import com.sp222kh.investigitor.repositories.ProjectRepository;
 import com.sp222kh.investigitor.repositories.SoftwareMetricsRepository;
 
 import java.io.File;
+import java.util.stream.Collectors;
 
 public class CollectSoftwareMetricsTask implements Task {
 
@@ -26,15 +26,17 @@ public class CollectSoftwareMetricsTask implements Task {
     public void run() throws Exception {
         for (Project p : projectRepository.findAll()) {
             String path = cloneFolder + p.getPathToRepo();
-/*
-            if(!p.isDownloaded() || !(new File(path)).exists()) continue;
-*/
+
+            if(softwareMetricsRepository.existsByProjectId(p.getId()) || !(new File(path)).exists()) continue;
+
             CKReport report = new CK().calculate(path);
 
-            for(CKNumber result : report.all()) {
-                if (result.isError()) continue;
-                softwareMetricsRepository.save(new SoftwareMetrics(p.getId(), result));
-            }
+            softwareMetricsRepository.save(report.all()
+                    .stream()
+                    .filter(result -> !result.isError())
+                    .map(result -> new SoftwareMetrics(p.getId(), result))
+                    .collect(Collectors.toList())
+            );
         }
     }
 }

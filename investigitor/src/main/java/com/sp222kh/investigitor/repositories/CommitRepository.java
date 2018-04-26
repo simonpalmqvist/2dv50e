@@ -39,4 +39,19 @@ public interface CommitRepository extends CrudRepository<Commit, Long> {
 
     @Transactional
     public void deleteByProjectId(Long projectId);
+
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE commit SET created_at = cast(created_at_text AS timestamp) WHERE created_at_text NOT LIKE ?1", nativeQuery = true)
+    public int updateCreateDates(String dateformat);
+
+    @Modifying
+    @Transactional
+    @Query(value = "CREATE INDEX IF NOT EXISTS project_commit_project_id_idx ON project_commit (project_id)", nativeQuery = true)
+    public void addProjectCommitProjectIdIndex();
+
+    @Modifying
+    @Transactional
+    @Query(value = "CREATE INDEX IF NOT EXISTS project_commit_commit_id_idx ON project_commit (commit_id)", nativeQuery = true)
+    public void addProjectCommitCommitIdIndex();
 }
