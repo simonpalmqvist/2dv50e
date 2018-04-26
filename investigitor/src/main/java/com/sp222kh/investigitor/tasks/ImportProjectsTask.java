@@ -18,7 +18,7 @@ public class ImportProjectsTask implements Task {
 
     @Override
     public void run() throws Exception {
-        String sql = "COPY project (id, url, owner_id, name, description, language, created_at, forked_from, deleted, updated_at) FROM stdin CSV DELIMITER ',' NULL '\\N' ESCAPE '\\'";
+        String sql = "COPY project (id, url, owner_id, name, description, language, created_at, forked_from, deleted, updated_at, creator) FROM stdin CSV DELIMITER ',' NULL '\\N' ESCAPE '\\'";
         Reader in = new BufferedReader(new FileReader(new File(file)));
         copyManager.copyIn(sql, in);
     }

@@ -36,7 +36,7 @@ public class InitService {
     JdbcTemplate jdbcTemplate;
 
     private final String PROJECT_CSV_NAME = "projects.csv";
-    private final String PROJECT_COMMIT_CSV_WILDCARD = "project_commits_split_*";
+    private final String PROJECT_COMMIT_CSV_NAME = "project_commits.csv";
     private final String COMMIT_CSV_NAME = "commits.csv";
     private final String WATCHERS_CSV_NAME = "watchers.csv";
 
@@ -72,16 +72,16 @@ public class InitService {
                 new ExtractDatabaseDumpTask(ArchiverFactory.createArchiver(TAR, GZIP), dumpArchive, dumpFolder),
                 new DeleteDatabaseDumpArchiveTask(dumpArchive),
                 new ImportProjectsTask(copyManager, dumpFolder.getAbsolutePath() + "/" + PROJECT_CSV_NAME),
-                new ImportProjectCommitsTask(copyManager, dumpFolder.getAbsolutePath(), PROJECT_COMMIT_CSV_WILDCARD),
+                new ImportProjectCommitsTask(copyManager, dumpFolder.getAbsolutePath() + "/" + PROJECT_COMMIT_CSV_NAME),
                 new ImportCommitsTask(copyManager, dumpFolder.getAbsolutePath() + "/" + COMMIT_CSV_NAME),
                 new ImportWatchersTask(copyManager, dumpFolder.getAbsolutePath() + "/" + WATCHERS_CSV_NAME),
                 new DeleteDatabaseDumpTask(dumpFolder),
-                new CreateIndexesTask(projectRepository, commitRepository)/*,
+                new FormatDateTask(projectRepository, commitRepository),
                 new FilterProjectsTask(projectRepository, commitRepository),
                 new FilterQualityProjectsTask(projectRepository, commitRepository),
                 new FilterDuplicateProjectsTask(projectRepository, commitRepository),
                 new DownloadSourceCodeTask(projectRepository, fileInfoRepository, CLONE_FOLDER),
-                new CollectSoftwareMetricsTask(projectRepository, softwareMetricsRepository, CLONE_FOLDER)*/
+                new CollectSoftwareMetricsTask(projectRepository, softwareMetricsRepository, CLONE_FOLDER)
         }, statusRepository);
 
         taskRunner.run();

@@ -11,29 +11,20 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.util.Collection;
-import java.util.List;
 
 public class ImportProjectCommitsTask implements Task {
     private final CopyManager copyManager;
-    private final String wildcard;
-    private final String directory;
-    private static final Logger log = LoggerFactory.getLogger(ImportProjectCommitsTask.class);
+    private final String file;
 
-    public ImportProjectCommitsTask(CopyManager copyManager, String directory, String wildcard) {
+    public ImportProjectCommitsTask(CopyManager copyManager, String file) {
         this.copyManager = copyManager;
-        this.wildcard = wildcard;
-        this.directory = directory;
+        this.file = file;
     }
 
     @Override
     public void run() throws Exception {
-        Collection<File> files = FileUtils.listFiles(new File(directory), new WildcardFileFilter(wildcard), null);
-
-        for(File file : files) {
-            log.info("Importing file: " + file.getName());
-            String sql = "COPY project_commit (project_id, commit_id) FROM stdin CSV DELIMITER ',' NULL '\\N'";
-            Reader in = new BufferedReader(new FileReader(file));
-            copyManager.copyIn(sql, in);
-        }
+        String sql = "COPY project_commit (project_id, commit_id) FROM stdin CSV DELIMITER ',' NULL '\\N'";
+        Reader in = new BufferedReader(new FileReader(new File(file)));
+        copyManager.copyIn(sql, in);
     }
 }

@@ -41,9 +41,4 @@ public interface ProjectRepository extends CrudRepository<Project, Long> {
     @Transactional
     @Query("DELETE FROM Watcher w WHERE NOT EXISTS (SELECT p.id FROM Project p WHERE p.id = w.projectId)")
     public void deleteWatchersWithoutProject();
-
-    @Query(value = "CREATE INDEX IF NOT EXISTS watcher_project_id_idx ON watcher (project_id)", nativeQuery = true)
-    public void addWatcherProjectIdIndex();
 }
-
-
