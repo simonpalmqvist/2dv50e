@@ -4,9 +4,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "project", indexes = {
-        @Index(columnList = "language", name = "project_language_index")
-})
+@Table(name = "project")
 public class Project {
 
     @Id
@@ -15,32 +13,14 @@ public class Project {
     @Column
     private String url;
 
-    @Column(name = "owner_id")
-    private int ownerId;
-
     @Column
     private String name;
 
     @Column(length = 1024)
     private String description;
 
-    @Column
-    private String language;
-
     @Column(name = "created_at", nullable = false)
     private Date createdAt;
-
-    @Column(name = "forked_from")
-    private Long forkedFromId;
-
-    @Column
-    private boolean deleted;
-
-    @Column(name = "updated_at")
-    private String updatedAt;
-
-    @Column(name = "creator")
-    private Long creator;
 
     protected Project() {}
 

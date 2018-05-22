@@ -4,16 +4,20 @@ import com.sp222kh.investigitor.repositories.CommitRepository;
 import com.sp222kh.investigitor.repositories.ProjectRepository;
 
 import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 
 public class FilterDuplicateProjectsTask implements Task {
 
     private final ProjectRepository projectRepository;
     private final CommitRepository commitRepository;
+    private Connection connection;
 
-    public FilterDuplicateProjectsTask(ProjectRepository projectRepository, CommitRepository commitRepository) {
+    public FilterDuplicateProjectsTask(ProjectRepository projectRepository, CommitRepository commitRepository, Connection connection) {
         this.projectRepository = projectRepository;
         this.commitRepository = commitRepository;
+        this.connection = connection;
     }
 
     @Override
@@ -33,7 +37,13 @@ public class FilterDuplicateProjectsTask implements Task {
             projectRepository.deleteDuplicateProjects(allDuplicates);
             projectRepository.deleteWatchersWithoutProject();
             commitRepository.deleteProjectCommitsWithoutProject();
+            vacuum();
             commitRepository.deleteCommitWithoutProject();
+            vacuum();
         }
+    }
+
+    private void vacuum() throws SQLException {
+        connection.createStatement().execute("VACUUM FULL ANALYZE");
     }
 }

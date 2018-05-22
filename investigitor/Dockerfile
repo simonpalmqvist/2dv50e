@@ -8,4 +8,4 @@ RUN apk upgrade
 RUN apk add bash
 RUN apk add git
 
-ENTRYPOINT ["/usr/local/bin/wait-for-it.sh", "db:5432", "--", "/usr/bin/java", "-jar", "/app.jar"]
+ENTRYPOINT ["/usr/local/bin/wait-for-it.sh", "db:5432", "--", "/usr/bin/java", "-Xmx6000m", "-jar", "/app.jar"]

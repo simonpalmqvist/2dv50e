@@ -26,15 +26,10 @@ public interface ProjectRepository extends CrudRepository<Project, Long> {
     @Transactional
     @Query(value = "DELETE FROM project p WHERE NOT (" +
             "(SELECT COUNT(w.project_id) FROM watcher w WHERE w.project_id = p.id) > 1 AND" +
-            "(SELECT COUNT(DISTINCT c.author_id) FROM commit c WHERE c.project_id = p.id) > 1 AND" +
-            "(SELECT MAX(c.created_at) FROM commit c WHERE c.project_id = p.id) - p.created_at > interval '99 days'" +
+            "(SELECT COUNT(DISTINCT c.author_id) FROM project_commit pc LEFT JOIN commit c ON pc.commit_id = c.id WHERE pc.project_id = p.id) > 1 AND" +
+            "(SELECT MAX(c.created_at) FROM project_commit pc LEFT JOIN commit c ON pc.commit_id = c.id WHERE pc.project_id = p.id) - p.created_at > interval '99 days'" +
             ")", nativeQuery = true)
     public void deleteNonQualityProjects();
-
-    @Modifying
-    @Transactional
-    @Query("DELETE FROM Project p WHERE deleted = TRUE OR language != 'Java'")
-    public void deleteNonJavaProjects();
 
     @Modifying
     @Transactional

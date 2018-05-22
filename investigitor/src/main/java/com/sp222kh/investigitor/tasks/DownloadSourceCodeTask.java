@@ -12,9 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class DownloadSourceCodeTask implements Task {
@@ -22,7 +20,7 @@ public class DownloadSourceCodeTask implements Task {
     private final ProjectRepository projectRepository;
     private final FileInfoRepository fileInfoRepository;
     private final String CLONE_FOLDER;
-    private static final Logger log = LoggerFactory.getLogger(TaskRunner.class);
+    private static final Logger log = LoggerFactory.getLogger(DownloadSourceCodeTask.class);
 
     public static final String[] FILES = new String[]{
             "readme.md",
@@ -52,13 +50,17 @@ public class DownloadSourceCodeTask implements Task {
             if(Files.exists(new File(path).toPath())) return;
 
             String command = "git clone --depth 1 https://github.com" + p.getPathToRepo() + ".git " + path;
+            List<FileInfo> fileInfo = new ArrayList<>();
 
             try {
                 (new File(path)).mkdirs();
                 Process process = Runtime.getRuntime().exec(command);
                 process.waitFor(1, TimeUnit.HOURS);
-                cleanUpAndIndexFiles(p.getId(), new File(path));
-                projectRepository.save(p);
+                cleanUpAndIndexFiles(p.getId(), new File(path), fileInfo);
+
+                if(fileInfo.size() == 0) throw new CloneException("Could not clone");
+
+                fileInfoRepository.save(fileInfo);
             } catch (IOException | InterruptedException e) {
                 log.info("Delete {} because of issues cloning or indexing files", p.getName());
                 FileUtils.deleteDirectory(new File(path));
@@ -68,14 +70,14 @@ public class DownloadSourceCodeTask implements Task {
         }
     }
 
-    private void cleanUpAndIndexFiles(long id, File file) throws IOException {
+    private void cleanUpAndIndexFiles(long id, File file, List<FileInfo> fileInfo) throws IOException {
         if (file.isDirectory()) {
             for (final File file2 : file.listFiles()) {
-                cleanUpAndIndexFiles(id, file2);
+                cleanUpAndIndexFiles(id, file2, fileInfo);
             }
         } else if (FilenameUtils.getExtension(file.getName()).equals("java") ||
                 FILES_TO_KEEP.contains(file.getName().toLowerCase())) {
-            fileInfoRepository.save(new FileInfo(id, file));
+            fileInfo.add(new FileInfo(id, file));
         } else {
             file.delete();
         }

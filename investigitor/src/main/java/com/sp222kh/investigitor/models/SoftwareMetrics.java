@@ -133,4 +133,36 @@ public class SoftwareMetrics {
         this.wmc = metrics.getWmc();
         this.loc = metrics.getLoc();
     }
+
+    public long getProjectId() {
+        return projectId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public long getCbo() {
+        return cbo;
+    }
+
+    public long getDit() {
+        return dit;
+    }
+
+    public long getNoc() {
+        return noc;
+    }
+
+    public long getRfc() {
+        return rfc;
+    }
+
+    public long getWmc() {
+        return wmc;
+    }
+
+    public long getLoc() {
+        return loc;
+    }
 }

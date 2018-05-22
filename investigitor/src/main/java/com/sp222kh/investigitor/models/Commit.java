@@ -16,23 +16,11 @@ public class Commit {
     @Id
     private long id;
 
-    @Column(name = "project_id")
-    private long projectId;
-
-    @Column
-    private String sha;
-
     @Column(name = "author_id")
     private long authorId;
 
-    @Column(name = "committer_id")
-    private long committerId;
-
     @Column(name = "created_at")
     private Date createdAt;
-
-    @Column(name = "created_at_text")
-    private String createdAtText;
 
     protected Commit() {}
 }

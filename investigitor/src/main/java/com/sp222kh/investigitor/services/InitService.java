@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.net.URL;
+import java.sql.Connection;
 
 import static org.rauschig.jarchivelib.ArchiveFormat.TAR;
 import static org.rauschig.jarchivelib.CompressionType.GZIP;
@@ -61,9 +62,10 @@ public class InitService {
         File dumpArchive = new File(DUMP_FILE);
         File dumpFolder = new File(DUMP_FOLDER);
 
-        CopyManager copyManager = jdbcTemplate
+        Connection connection = jdbcTemplate
                 .getDataSource()
-                .getConnection()
+                .getConnection();
+        CopyManager copyManager = connection
                 .unwrap(PGConnection.class)
                 .getCopyAPI();
 
@@ -72,14 +74,14 @@ public class InitService {
                 new ExtractDatabaseDumpTask(ArchiverFactory.createArchiver(TAR, GZIP), dumpArchive, dumpFolder),
                 new DeleteDatabaseDumpArchiveTask(dumpArchive),
                 new ImportProjectsTask(copyManager, dumpFolder.getAbsolutePath() + "/" + PROJECT_CSV_NAME),
-                new ImportProjectCommitsTask(copyManager, dumpFolder.getAbsolutePath() + "/" + PROJECT_COMMIT_CSV_NAME),
-                new ImportCommitsTask(copyManager, dumpFolder.getAbsolutePath() + "/" + COMMIT_CSV_NAME),
-                new ImportWatchersTask(copyManager, dumpFolder.getAbsolutePath() + "/" + WATCHERS_CSV_NAME),
+                new ImportProjectCommitsTask(projectRepository, copyManager, dumpFolder.getAbsolutePath() + "/" + PROJECT_COMMIT_CSV_NAME),
+                new CreateCommitIdIndexTask(connection),
+                new ImportCommitsTask(commitRepository, copyManager, dumpFolder.getAbsolutePath() + "/" + COMMIT_CSV_NAME),
+                new ImportWatchersTask(projectRepository, copyManager, dumpFolder.getAbsolutePath() + "/" + WATCHERS_CSV_NAME),
                 new DeleteDatabaseDumpTask(dumpFolder),
-                new FormatDateTask(projectRepository, commitRepository),
-                new FilterProjectsTask(projectRepository, commitRepository),
-                new FilterQualityProjectsTask(projectRepository, commitRepository),
-                new FilterDuplicateProjectsTask(projectRepository, commitRepository),
+                new CreateIndexesTask(connection),
+                new FilterQualityProjectsTask(projectRepository, commitRepository, connection),
+                new FilterDuplicateProjectsTask(projectRepository, commitRepository, connection),
                 new DownloadSourceCodeTask(projectRepository, fileInfoRepository, CLONE_FOLDER),
                 new CollectSoftwareMetricsTask(projectRepository, softwareMetricsRepository, CLONE_FOLDER)
         }, statusRepository);

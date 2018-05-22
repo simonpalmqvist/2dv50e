@@ -49,6 +49,12 @@
         </dependency>
 
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.5</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.rauschig</groupId>
 			<artifactId>jarchivelib</artifactId>
 			<version>0.7.1</version>
@@ -76,12 +82,6 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>9.4.1212.jre7</version>
-		</dependency>
-
-		<dependency>
-			<groupId>nz.ac.waikato.cms.weka</groupId>
-			<artifactId>weka-stable</artifactId>
-			<version>3.8.0</version>
 		</dependency>
 	</dependencies>
 
